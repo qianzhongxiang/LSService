@@ -1,0 +1,49 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "remove packages",
+            "command": "rmdir",
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "args": [
+                "nupkgs",
+                "-Recurse"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "pack with symbols",
+            "command": "dotnet",
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "args": [
+                "pack",
+                 "--include-symbols",
+                 "--output",
+                 "nupkgs"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "push to DONN",
+            "command":"dotnet",
+            "type": "shell",
+            "args": [
+                "nuget",
+                "push",
+                ".\\nupkgs\\DONN.*.nupkg",
+                "b37662e6-da49-4427-a914-355286033101",
+                "-s",
+                "http://packages.donntech.com/nuget"
+            ],
+            "dependsOn":["remove packages","pack with symbols"]
+        }
+    ]
+}

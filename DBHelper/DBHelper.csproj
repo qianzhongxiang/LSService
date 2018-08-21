@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+     <AssemblyName>DONN.LS.DBHELPER</AssemblyName>
+    <RootNamespace>DONN.LS.DBHELPER</RootNamespace>
+    <PackageVersion>1.0.3</PackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DONN.LS.ENTITIES" Version="1.0.3" />
+    <PackageReference Include="donn.tools.logger" Version="1.0.3" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.1.1" />
+  </ItemGroup>
+
+</Project>
