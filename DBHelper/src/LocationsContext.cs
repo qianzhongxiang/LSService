@@ -2,7 +2,7 @@
 using DONN.LS.ENTITIES;
 using Microsoft.EntityFrameworkCore;
 
-namespace DONN.LS.DBHELPER
+namespace DONN.LS.DBHelper
 {
     public partial class LocationContext : DbContext
     {

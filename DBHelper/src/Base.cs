@@ -6,24 +6,29 @@ using System.Threading;
 using DONN.LS.ENTITIES;
 using Microsoft.EntityFrameworkCore;
 using DONN.Tools.Logger;
+using System.Data.Common;
+using System.Data;
 
-namespace DONN.LS.DBHELPER
+namespace DONN.LS.DBHelper
 {
     public abstract class Base
     {
         protected readonly string prefix = "TL_";
+        private readonly string table_schema = "public";
+
         private int switcher = 0;
         private List<TempLocations>[] data = new List<TempLocations>[] { new List<TempLocations>(), new List<TempLocations>() };
-        private LocationContext locationContext;
-        private ProfileContext profileContext;
+        private LocationContext locationContext = null;
+        private ProfileContext profileContext = null;
         protected DbContextOptionsBuilder<LocationContext> locationOptionsBuilder;
         protected DbContextOptionsBuilder<ProfileContext> profileOptionsBuilder;
         public string TableName { get => prefix + TableNo; }
-        public Base()
+        public Base(string connectionString)
         {
-            //初始化 context
-            profileContext = CreateProfileContext();
+            InitDbContextOptionsBuilder(connectionString);
         }
+
+        protected abstract void InitDbContextOptionsBuilder(string connectionString);
         protected virtual LocationContext CreateLoactionContext()
         {
             var context = new LocationContext(locationOptionsBuilder.Options, TableName);
@@ -35,7 +40,16 @@ namespace DONN.LS.DBHELPER
             var context = new ProfileContext(profileOptionsBuilder.Options);
             return context;
         }
-        public virtual void UpdateItems(IEnumerable<TempLocations> items) => this.data[switcher].AddRange(items);
+        public virtual void UpdateItems(IEnumerable<TempLocations> items)
+        {
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+
+            data[switcher].AddRange(items);
+        }
+
         private SemaphoreSlim semaphore4Location = new SemaphoreSlim(1, 1);
         /// <summary>
         /// 需要改进性能
@@ -94,19 +108,53 @@ namespace DONN.LS.DBHELPER
         }
         public virtual void UpdateProfile(IEnumerable<DeviceProfile> items)
         {
+            if (items == null)
+            {
+                throw new ArgumentNullException(nameof(items));
+            }
+
             profileContext.DeviceProfile.UpdateRange(items);
         }
         private int _tableNo = 0;
         public int TableNo { get => _tableNo; private set => _tableNo = value; }
-
-        public IEnumerable<DONN.LS.ENTITIES.TempLocations> GetItems()
+        private IEnumerable<string> GetExistedTableName(DateTime sTime, DateTime eTime)
         {
-            return null;
+            var days = new List<string>();
+            int s = int.Parse(sTime.ToString("yyyyMMdd")), e = int.Parse(eTime.ToString("yyyyMMdd"));
+            for (int i = s; i <= e; i++)
+            {
+                days.Add($"'{prefix}{i}'");
+            }
+            var tableNQeryStr = $"SELECT table_name FROM information_schema.tables  WHERE table_schema = '{table_schema}' AND table_type = 'BASE TABLE' AND table_name in ({string.Join(",", days)}) order by table_name; ";
+            return profileContext.Query<string>().FromSql(tableNQeryStr);
+        }
+        protected abstract ParameterBuilder ParameterBuilder(IEnumerable<object[]> items);
+
+
+        public IEnumerable<DONN.LS.ENTITIES.TempLocations> GetItems(string uid, string type, int interval, DateTime sTime, DateTime eTime, int index, int count)
+        {
+            var names = GetExistedTableName(sTime, eTime);
+            if (names.Count() > 0)
+            {
+                var parametersBuilder = ParameterBuilder(new List<object[]>{
+                    new object[]{"@UniqueId", uid}
+                    ,new object[]{"@Type",  type.ToLower()}
+                    ,new object[]{"@eTime", eTime.ToUniversalTime()}
+                    ,new object[]{"@sTime",  sTime.ToUniversalTime()}
+                    });
+                string queryStr = string.Join(" UNION ALL", names.Select(n => $"(Select * from {table_schema}.\"{n}\" WHERE uniqueid=@UniqueId AND type=@Type AND sendtime<@eTime AND sendtime>@sTime {(interval != 0 ? " AND custominterval>=@interval" : "")})")) + $" ORDER BY sendtime LIMIT {count} OFFSET {count * (index - 1)}";
+                if (interval != 0)
+                {
+                    parametersBuilder.Add("@interval", interval);
+                }
+                return profileContext.Query<TempLocations>().FromSql(queryStr, parametersBuilder.Build());
+            }
+            return new List<TempLocations>();
         }
 
-        public IEnumerable<DONN.LS.ENTITIES.TeminalInfo> GetProfiles()
+        public IEnumerable<DONN.LS.ENTITIES.DeviceProfile> GetProfiles()
         {
-            return null;
+            return profileContext.DeviceProfile.ToList();
         }
     }
 }

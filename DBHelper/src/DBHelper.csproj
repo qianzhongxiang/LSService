@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-     <AssemblyName>DONN.LS.DBHELPER</AssemblyName>
-    <RootNamespace>DONN.LS.DBHELPER</RootNamespace>
+     <AssemblyName>DONN.LS.DBHelper</AssemblyName>
+    <RootNamespace>DONN.LS.DBHelper</RootNamespace>
     <PackageVersion>1.0.3</PackageVersion>
   </PropertyGroup>
 
