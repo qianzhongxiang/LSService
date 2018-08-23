@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="DONN.LS.ENTITIES" Version="1.0.3" />
     <PackageReference Include="donn.tools.logger" Version="1.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.1.2" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.1.1" />
   </ItemGroup>
 

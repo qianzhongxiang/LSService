@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using DONN.Tools.Logger;
 using System.Data.Common;
 using System.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DONN.LS.DBHelper
 {
@@ -27,12 +29,31 @@ namespace DONN.LS.DBHelper
         {
             InitDbContextOptionsBuilder(connectionString);
         }
-
+        /// <summary>
+        /// Get local volume of table for testing
+        /// </summary>
+        /// <param name="type">l|p</param>
+        /// <returns></returns>
+        public int GetVolume(string type)
+        {
+            switch (type)
+            {
+                case "l":
+                    return locationContext.TempLocations.Local.Count;
+                case "p":
+                    return profileContext.DeviceProfile.Local.Count;
+                default:
+                    return 0;
+            }
+        }
         protected abstract void InitDbContextOptionsBuilder(string connectionString);
         protected virtual LocationContext CreateLoactionContext()
         {
             var context = new LocationContext(locationOptionsBuilder.Options, TableName);
             context.ChangeTracker.AutoDetectChangesEnabled = false;
+            RelationalDatabaseCreator databaseCreator = (RelationalDatabaseCreator)context.Database.GetService<IDatabaseCreator>();
+            databaseCreator.CreateTablesAsync();
+            context.SaveChanges();
             return context;
         }
         protected virtual ProfileContext CreateProfileContext()
@@ -55,7 +76,7 @@ namespace DONN.LS.DBHelper
         /// 需要改进性能
         /// </summary>
         /// <returns></returns>
-        public virtual async void SaveItemsChangeAsync()
+        public virtual async Task<int> SaveItemsChangeAsync()
         {
             try
             {
@@ -66,7 +87,7 @@ namespace DONN.LS.DBHelper
                 {
                     TableNo = int.Parse(str);
                     if (locationContext != null) locationContext.Dispose();
-                    CreateLoactionContext();
+                    locationContext = CreateLoactionContext();
                 }
 
                 locationContext.TempLocations.Local.ToList().ForEach(l =>
@@ -78,7 +99,7 @@ namespace DONN.LS.DBHelper
                 switcher = (switcher + 1) % 2;
                 locationContext.TempLocations.AddRange(data[1 - switcher]);
                 locationContext.ChangeTracker.DetectChanges();
-                locationContext.SaveChanges();
+                return locationContext.SaveChanges();
             }
             catch (Exception e)
             {
@@ -90,12 +111,13 @@ namespace DONN.LS.DBHelper
                 if (semaphore4Location.CurrentCount == 0)
                     semaphore4Location.Release();
             }
+            return 0;
         }
-        public virtual async void SaveProfilesChangeAsync()
+        public virtual async Task<int> SaveProfilesChangeAsync()
         {
             try
             {
-                await profileContext.SaveChangesAsync();
+                return profileContext.SaveChanges();
             }
             catch (Exception e)
             {
@@ -105,6 +127,7 @@ namespace DONN.LS.DBHelper
             {
 
             }
+            return 0;
         }
         public virtual void UpdateProfile(IEnumerable<DeviceProfile> items)
         {

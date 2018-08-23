@@ -19,6 +19,7 @@ namespace DONN.LS.DBHelper
         public LocationContext(DbContextOptions<LocationContext> options, string tableName) : base(options)
         {
             _tableName = tableName;
+            Database.Migrate();
             //this.Configuration.LazyLoadingEnabled = false;
             //this.Configuration.ProxyCreationEnabled = false;
 
@@ -41,9 +42,10 @@ namespace DONN.LS.DBHelper
 
         public void ModelOptions(ModelBuilder modelBuilder)
         {
-            // Database.SetInitializer<Db_Entities>(null);
             modelBuilder.HasDefaultSchema(table_schema);
-            modelBuilder.Entity<TempLocations>().ToTable(_tableName).HasKey(c => c.Id);
+            modelBuilder.Entity<TempLocations>()
+            .ToTable(_tableName)
+            .HasKey(c => c.Id);
             // modelBuilder.Properties().Configure(c =>
             // {
             //     var name = c.ClrPropertyInfo.Name;

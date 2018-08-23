@@ -46,6 +46,7 @@ namespace DONN.LS.DBHelper
                     default:
                         throw new System.ArgumentException("support pgsql only, now", "provider");
                 }
+                if (providers == null) System.Diagnostics.Debug.WriteLine("providers is null");
                 providers.Add(key, instance);
                 return instance;
             }
