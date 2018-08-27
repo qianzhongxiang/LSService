@@ -24,34 +24,37 @@ namespace DONN.LS.DBHelper
             {
                 throw new System.ArgumentException("is required", nameof(key));
             }
-            if (providers.ContainsKey(key))
-            {
-                throw new System.ArgumentException("was existed", nameof(key));
-            }
+         
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw new System.ArgumentException("is required", nameof(connectionString));
             }
-            if (providers.ContainsKey(key)) return providers[key];
-            else
+            lock (providers)
             {
-                Base instance;
-                //distribute 
-                switch (provider)
+                if (providers.ContainsKey(key))
                 {
-                    case Providers.Pgsql:
-                        instance = new PGSQL(connectionString);
-                        break;
-                    default:
-                        throw new System.ArgumentException("support pgsql only, now", "provider");
+                    throw new System.ArgumentException("was existed", nameof(key));
                 }
-                if (providers == null) System.Diagnostics.Debug.WriteLine("providers is null");
-                providers.Add(key, instance);
-                return instance;
+                if (providers.ContainsKey(key)) return providers[key];
+                else
+                {
+                    Base instance;
+                    //distribute 
+                    switch (provider)
+                    {
+                        case Providers.Pgsql:
+                            instance = new PGSQL(connectionString);
+                            break;
+                        default:
+                            throw new System.ArgumentException("support pgsql only, now", "provider");
+                    }
+                    if (instance == null) throw new System.Exception("Instance:instance is null");
+                    if (providers == null) throw new System.Exception("Instance:providers is null");
+                    providers.Add(key, instance);
+                    return instance;
+                }
             }
-
-
         }
         /// <summary>
         /// Get corresponsible provider by key, by default, get the last one

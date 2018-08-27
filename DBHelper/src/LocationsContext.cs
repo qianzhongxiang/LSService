@@ -1,5 +1,5 @@
 
-using DONN.LS.ENTITIES;
+using DONN.LS.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace DONN.LS.DBHelper

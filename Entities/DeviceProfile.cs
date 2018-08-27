@@ -17,10 +17,14 @@ namespace DONN.LS.Entities
         public Guid IdLoactionData { get; set; }
 
         public int Interval { get; set; }
+        /// <summary>
+        /// 系统自动生成，不需要手动填写 
+        /// </summary>
+        /// <value></value>
         public DateTime UpdateTime { get; set; }
 
         /// <summary>
-        /// format:yyyMMdd
+        /// 系统自动生成，不需要手动填写 format:yyyMMdd
         /// </summary>
         public int Day { get; set; }
 
@@ -29,7 +33,6 @@ namespace DONN.LS.Entities
         [NotMapped]
         private TempLocations location;
         [NotMapped]
-
         public TempLocations LocationItem
         {
             get => location; set

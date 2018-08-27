@@ -5,6 +5,12 @@ VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Entities", "Entities\Entities.csproj", "{2E61E623-4AC4-4EC3-AC14-AC2349602D53}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{43360571-5868-4363-9304-3D5E27F4DF05}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test", "DBHelper\test\test.csproj", "{192DCD7F-B674-423B-9DEE-17A76A055F1A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBHelper", "DBHelper\src\DBHelper.csproj", "{89EBD2A8-F943-4AAB-BEE4-2AE2D86DC008}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,9 +21,20 @@ Global
 		{2E61E623-4AC4-4EC3-AC14-AC2349602D53}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E61E623-4AC4-4EC3-AC14-AC2349602D53}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E61E623-4AC4-4EC3-AC14-AC2349602D53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{192DCD7F-B674-423B-9DEE-17A76A055F1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{192DCD7F-B674-423B-9DEE-17A76A055F1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{192DCD7F-B674-423B-9DEE-17A76A055F1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{192DCD7F-B674-423B-9DEE-17A76A055F1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89EBD2A8-F943-4AAB-BEE4-2AE2D86DC008}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89EBD2A8-F943-4AAB-BEE4-2AE2D86DC008}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89EBD2A8-F943-4AAB-BEE4-2AE2D86DC008}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89EBD2A8-F943-4AAB-BEE4-2AE2D86DC008}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{192DCD7F-B674-423B-9DEE-17A76A055F1A} = {43360571-5868-4363-9304-3D5E27F4DF05}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7ACF09FA-72B3-4D61-8E5C-02505C0D075C}

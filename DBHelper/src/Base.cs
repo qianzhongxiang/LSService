@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
-using DONN.LS.ENTITIES;
+using DONN.LS.Entities;
 using Microsoft.EntityFrameworkCore;
 using DONN.Tools.Logger;
 using System.Data.Common;
@@ -28,6 +28,11 @@ namespace DONN.LS.DBHelper
         public Base(string connectionString)
         {
             InitDbContextOptionsBuilder(connectionString);
+            InitProfile();
+        }
+        private void InitProfile()
+        {
+            profileContext = CreateProfileContext().Result;
         }
         /// <summary>
         /// Get local volume of table for testing
@@ -47,19 +52,45 @@ namespace DONN.LS.DBHelper
             }
         }
         protected abstract void InitDbContextOptionsBuilder(string connectionString);
-        protected virtual LocationContext CreateLoactionContext()
+        protected virtual async Task<LocationContext> CreateLoactionContext()
         {
-            var context = new LocationContext(locationOptionsBuilder.Options, TableName);
-            context.ChangeTracker.AutoDetectChangesEnabled = false;
-            RelationalDatabaseCreator databaseCreator = (RelationalDatabaseCreator)context.Database.GetService<IDatabaseCreator>();
-            databaseCreator.CreateTablesAsync();
-            context.SaveChanges();
-            return context;
+            try
+            {
+                var context = new LocationContext(locationOptionsBuilder.Options, TableName);
+                context.ChangeTracker.AutoDetectChangesEnabled = false;
+                context.Database.AutoTransactionsEnabled = false;
+                RelationalDatabaseCreator databaseCreator = (RelationalDatabaseCreator)context.Database.GetService<IDatabaseCreator>();
+                var now = DateTime.Now;
+                if (!TableExisted(context,$"{prefix}{int.Parse(now.ToString("yyyyMMdd"))}"))
+                    await databaseCreator.CreateTablesAsync();
+                return context;
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error(e.ToString(), e);
+            }
+            return null;
         }
-        protected virtual ProfileContext CreateProfileContext()
+        private SemaphoreSlim ssProfile = new SemaphoreSlim(1, 1);
+        protected virtual async Task<ProfileContext> CreateProfileContext()
         {
-            var context = new ProfileContext(profileOptionsBuilder.Options);
-            return context;
+            try
+            {
+                var context = new ProfileContext(profileOptionsBuilder.Options);
+                context.Database.AutoTransactionsEnabled = true;
+                RelationalDatabaseCreator databaseCreator = (RelationalDatabaseCreator)context.Database.GetService<IDatabaseCreator>();
+                await ssProfile.WaitAsync();
+                if (!TableExisted(context,"DeviceProfile"))
+                    await databaseCreator.CreateTablesAsync();
+                context.DeviceProfile.Load();
+                ssProfile.Release();
+                return context;
+            }
+            catch (Exception e)
+            {
+                LogHelper.Error(e.ToString(), e);
+            }
+            return null;
         }
         public virtual void UpdateItems(IEnumerable<TempLocations> items)
         {
@@ -67,8 +98,12 @@ namespace DONN.LS.DBHelper
             {
                 throw new ArgumentNullException(nameof(items));
             }
-
-            data[switcher].AddRange(items);
+            foreach (var item in items)
+            {
+                item.CollectTime = item.CollectTime.ToUniversalTime();
+                item.SendTime = item.SendTime?.ToUniversalTime();
+                data[switcher].Add(item);
+            }
         }
 
         private SemaphoreSlim semaphore4Location = new SemaphoreSlim(1, 1);
@@ -87,9 +122,8 @@ namespace DONN.LS.DBHelper
                 {
                     TableNo = int.Parse(str);
                     if (locationContext != null) locationContext.Dispose();
-                    locationContext = CreateLoactionContext();
+                    locationContext = await CreateLoactionContext();
                 }
-
                 locationContext.TempLocations.Local.ToList().ForEach(l =>
                 {
                     var entry = locationContext.Entry(l);
@@ -99,7 +133,8 @@ namespace DONN.LS.DBHelper
                 switcher = (switcher + 1) % 2;
                 locationContext.TempLocations.AddRange(data[1 - switcher]);
                 locationContext.ChangeTracker.DetectChanges();
-                return locationContext.SaveChanges();
+                var c = locationContext.SaveChanges();
+                return c;
             }
             catch (Exception e)
             {
@@ -135,12 +170,24 @@ namespace DONN.LS.DBHelper
             {
                 throw new ArgumentNullException(nameof(items));
             }
-
-            profileContext.DeviceProfile.UpdateRange(items);
+            ssProfile.Wait();
+            foreach (var item in items)
+            {
+                var previous = profileContext.DeviceProfile.FirstOrDefault(i => i.Uid == item.Uid && i.Type == item.Type);
+                item.UpdateTime = item.UpdateTime.ToUniversalTime();
+                if (previous == null)
+                    profileContext.DeviceProfile.Add(item);
+                else if (item != previous)
+                {
+                    profileContext.Entry(previous).State = EntityState.Detached;
+                    profileContext.DeviceProfile.Update(item);
+                }
+            }
+            ssProfile.Release();
         }
         private int _tableNo = 0;
         public int TableNo { get => _tableNo; private set => _tableNo = value; }
-        private IEnumerable<string> GetExistedTableName(DateTime sTime, DateTime eTime)
+        public IEnumerable<string> GetExistedTableName(DateTime sTime, DateTime eTime)
         {
             var days = new List<string>();
             int s = int.Parse(sTime.ToString("yyyyMMdd")), e = int.Parse(eTime.ToString("yyyyMMdd"));
@@ -148,13 +195,39 @@ namespace DONN.LS.DBHelper
             {
                 days.Add($"'{prefix}{i}'");
             }
+
             var tableNQeryStr = $"SELECT table_name FROM information_schema.tables  WHERE table_schema = '{table_schema}' AND table_type = 'BASE TABLE' AND table_name in ({string.Join(",", days)}) order by table_name; ";
-            return profileContext.Query<string>().FromSql(tableNQeryStr);
+            var command = profileContext.Database.GetDbConnection().CreateCommand();
+            command.CommandText = tableNQeryStr;
+            profileContext.Database.OpenConnection();
+            var res = new List<string>();
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    res.Add(reader[0] as string);
+                }
+            }
+            return res;
+        }
+        private bool TableExisted(DbContext context, string tableName)
+        {
+            var tableNQeryStr = $"SELECT table_name FROM information_schema.tables  WHERE table_schema = '{table_schema}' AND table_type = 'BASE TABLE' AND table_name ='{tableName}'; ";
+            var command = context.Database.GetDbConnection().CreateCommand();
+            command.CommandText = tableNQeryStr;
+            context.Database.OpenConnection();
+            var res = false;
+            using (var reader = command.ExecuteReader())
+            {
+
+                res = reader.Read();
+            }
+            return res;
         }
         protected abstract ParameterBuilder ParameterBuilder(IEnumerable<object[]> items);
 
 
-        public IEnumerable<DONN.LS.ENTITIES.TempLocations> GetItems(string uid, string type, int interval, DateTime sTime, DateTime eTime, int index, int count)
+        public IEnumerable<DONN.LS.Entities.TempLocations> GetItems(string uid, string type, int interval, DateTime sTime, DateTime eTime, int index, int count)
         {
             var names = GetExistedTableName(sTime, eTime);
             if (names.Count() > 0)
@@ -165,17 +238,20 @@ namespace DONN.LS.DBHelper
                     ,new object[]{"@eTime", eTime.ToUniversalTime()}
                     ,new object[]{"@sTime",  sTime.ToUniversalTime()}
                     });
-                string queryStr = string.Join(" UNION ALL", names.Select(n => $"(Select * from {table_schema}.\"{n}\" WHERE uniqueid=@UniqueId AND type=@Type AND sendtime<@eTime AND sendtime>@sTime {(interval != 0 ? " AND custominterval>=@interval" : "")})")) + $" ORDER BY sendtime LIMIT {count} OFFSET {count * (index - 1)}";
+                string queryStr = string.Join(" UNION ALL", names.Select(n => $"(Select * from {table_schema}.\"{n}\" WHERE \"UniqueId\"=@UniqueId AND \"Type\"=@Type AND \"SendTime\"<@eTime AND \"SendTime\">@sTime {(interval != 0 ? " AND \"CustomInterval\">=@interval" : "")})")) + $" ORDER BY \"SendTime\" LIMIT {count} OFFSET {count * (index - 1)}";
                 if (interval != 0)
                 {
                     parametersBuilder.Add("@interval", interval);
                 }
-                return profileContext.Query<TempLocations>().FromSql(queryStr, parametersBuilder.Build());
+                semaphore4Location.Wait();
+                var res = locationContext.TempLocations.AsNoTracking().FromSql(queryStr, parametersBuilder.Build().ToArray());
+                semaphore4Location.Release();
+                return res;
             }
             return new List<TempLocations>();
         }
 
-        public IEnumerable<DONN.LS.ENTITIES.DeviceProfile> GetProfiles()
+        public IEnumerable<DONN.LS.Entities.DeviceProfile> GetProfiles()
         {
             return profileContext.DeviceProfile.ToList();
         }
