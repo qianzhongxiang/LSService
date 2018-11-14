@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>DONN.LS.Terminal.Android</AssemblyName>
+    <PackageVersion>1.0.1</PackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DONN.LS.IDataAdapter" Version="1.0.2" />
+    <PackageReference Include="DONN.Tools.Logger" Version="1.0.3" />
+    <PackageReference Include="DONN.Tools.Protocol.DataResolver" Version="1.0.2" />
+  </ItemGroup>
+
+</Project>

@@ -12,6 +12,10 @@ namespace DONN.LS.Entities
         public string Uid { get; set; }
         public string Type { get; set; }
 
+/// <summary>
+/// desolate
+/// </summary>
+/// <value></value>
         public DeviceStatus DevState { get; set; }
 
         public Guid IdLoactionData { get; set; }

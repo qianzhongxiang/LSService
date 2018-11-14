@@ -1,0 +1,101 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "remove packages",
+            "command": "rmdir",
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "args": [
+                "nupkgs",
+                "-Recurse"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "pack with symbols",
+            "command": "dotnet",
+            "type": "shell",
+            "presentation": {
+                "reveal": "always"
+            },
+            "args": [
+                "pack",
+                "--include-symbols",
+                "--output",
+                "nupkgs"
+            ],
+            "problemMatcher": "$msCompile",
+            "dependsOn": [
+                "remove packages"
+            ]
+        },
+        {
+            "label": "push to DONN",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "nuget",
+                "push",
+                ".\\nupkgs\\*.nupkg",
+                "b37662e6-da49-4427-a914-355286033101",
+                "-s",
+                "http://packages.donntech.com/nuget"
+            ],
+            "dependsOn": [
+                "pack with symbols"
+            ]
+        },
+        {
+            "label": "push to nuget",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "nuget",
+                "push",
+                ".\\nupkgs\\*.nupkg",
+                "oy2i3t35tvtlu46opriqwwnabamdgdsu3cs7hag6xsruey",
+                "-src",
+                "https://www.nuget.org"
+            ],
+            "dependsOn": [
+                "pack with symbols"
+            ]
+        },
+        {
+            "label": "push to All",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "nuget",
+                "push",
+                ".\\nupkgs\\*.nupkg",
+                "oy2i3t35tvtlu46opriqwwnabamdgdsu3cs7hag6xsruey",
+                "-src",
+                "https://www.nuget.org"
+            ],
+            "dependsOn": [
+                "push to nuget",
+                "push to DONN",
+                "push to local"
+            ]
+        },
+        {
+            "label": "push to local",
+            "command": "Copy-Item",
+            "type": "shell",
+            "args": [
+                ".\\nupkgs\\*.nupkg",
+                "-Destination",
+                "D:\\nuget packages"
+            ],
+            "dependsOn": [
+                "pack with symbols"
+            ]
+        }
+    ]
+}

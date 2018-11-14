@@ -57,5 +57,22 @@ namespace DONN.LS.DBHelper
             }
             return builder;
         }
+
+        protected override bool TableExisted(DbContext context, string tableName)
+        {
+            var tableNQeryStr = $"SELECT table_name FROM information_schema.tables  WHERE table_schema = '{table_schema}' AND table_type = 'BASE TABLE' AND table_name ='{tableName}'; ";
+            var command = context.Database.GetDbConnection().CreateCommand();
+            command.CommandText = tableNQeryStr;
+            context.Database.OpenConnection();
+            var res = false;
+            using (var reader = command.ExecuteReader())
+            {
+
+                res = reader.Read();
+            }
+            return res;
+        }
+
+
     }
 }

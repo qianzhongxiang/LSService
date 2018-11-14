@@ -16,7 +16,7 @@ namespace DONN.LS.DBHelper
     public abstract class Base
     {
         protected readonly string prefix = "TL_";
-        private readonly string table_schema = "public";
+        protected readonly string table_schema = "public";
 
         private int switcher = 0;
         private List<TempLocations>[] data = new List<TempLocations>[] { new List<TempLocations>(), new List<TempLocations>() };
@@ -61,7 +61,7 @@ namespace DONN.LS.DBHelper
                 context.Database.AutoTransactionsEnabled = false;
                 RelationalDatabaseCreator databaseCreator = (RelationalDatabaseCreator)context.Database.GetService<IDatabaseCreator>();
                 var now = DateTime.Now;
-                if (!TableExisted(context,$"{prefix}{int.Parse(now.ToString("yyyyMMdd"))}"))
+                if (!TableExisted(context, $"{prefix}{int.Parse(now.ToString("yyyyMMdd"))}"))
                     await databaseCreator.CreateTablesAsync();
                 return context;
             }
@@ -80,7 +80,7 @@ namespace DONN.LS.DBHelper
                 context.Database.AutoTransactionsEnabled = true;
                 RelationalDatabaseCreator databaseCreator = (RelationalDatabaseCreator)context.Database.GetService<IDatabaseCreator>();
                 await ssProfile.WaitAsync();
-                if (!TableExisted(context,"DeviceProfile"))
+                if (!TableExisted(context, "DeviceProfile"))
                     await databaseCreator.CreateTablesAsync();
                 context.DeviceProfile.Load();
                 ssProfile.Release();
@@ -210,20 +210,9 @@ namespace DONN.LS.DBHelper
             }
             return res;
         }
-        private bool TableExisted(DbContext context, string tableName)
-        {
-            var tableNQeryStr = $"SELECT table_name FROM information_schema.tables  WHERE table_schema = '{table_schema}' AND table_type = 'BASE TABLE' AND table_name ='{tableName}'; ";
-            var command = context.Database.GetDbConnection().CreateCommand();
-            command.CommandText = tableNQeryStr;
-            context.Database.OpenConnection();
-            var res = false;
-            using (var reader = command.ExecuteReader())
-            {
+        protected abstract bool TableExisted(DbContext context, string tableName);
 
-                res = reader.Read();
-            }
-            return res;
-        }
+
         protected abstract ParameterBuilder ParameterBuilder(IEnumerable<object[]> items);
 
 
