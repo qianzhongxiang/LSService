@@ -11,6 +11,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test", "DBHelper\test\test.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBHelper", "DBHelper\src\DBHelper.csproj", "{89EBD2A8-F943-4AAB-BEE4-2AE2D86DC008}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBHelperSingle", "DBHelperSingle\DBHelperSingle.csproj", "{D7F7597B-F079-4243-A768-7D482311E8A3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataDispatch", "DataDispatch\DataDispatch.csproj", "{4851DB8C-18ED-4E67-8A48-404D2180A872}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +33,14 @@ Global
 		{89EBD2A8-F943-4AAB-BEE4-2AE2D86DC008}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89EBD2A8-F943-4AAB-BEE4-2AE2D86DC008}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89EBD2A8-F943-4AAB-BEE4-2AE2D86DC008}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7F7597B-F079-4243-A768-7D482311E8A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7F7597B-F079-4243-A768-7D482311E8A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7F7597B-F079-4243-A768-7D482311E8A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7F7597B-F079-4243-A768-7D482311E8A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4851DB8C-18ED-4E67-8A48-404D2180A872}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4851DB8C-18ED-4E67-8A48-404D2180A872}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4851DB8C-18ED-4E67-8A48-404D2180A872}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4851DB8C-18ED-4E67-8A48-404D2180A872}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

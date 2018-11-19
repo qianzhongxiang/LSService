@@ -13,15 +13,14 @@ namespace DONN.LS.DataDispatch
         private static IManagedMqttClient mqttClient;
 
         private static MqttApplicationMessageBuilder messageBuilder = new MqttApplicationMessageBuilder()
-                .WithTopic("MyTopic")
-                .WithAtMostOnceQoS()
+                .WithAtLeastOnceQoS()
                 .WithRetainFlag();
         static Dispatcher()
         {
 
 
         }
-        public static void Init(string mqttHostName, int mqttPort, string dbConnectStr)
+        public static void Init(string mqttHostName, int mqttPort, string userName, string password = null, string dbConnectStr = null)
         {
             try
             {
@@ -30,7 +29,9 @@ namespace DONN.LS.DataDispatch
                 .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
                 .WithClientOptions(new MqttClientOptionsBuilder()
                 .WithClientId("LSService")
-                .WithTcpServer(mqttHostName, mqttPort).Build())
+                .WithTcpServer(mqttHostName, mqttPort)
+                .WithCredentials(userName, password)
+                .Build())
                 .Build();
 
                 mqttClient = new MqttFactory().CreateManagedMqttClient();
@@ -41,13 +42,10 @@ namespace DONN.LS.DataDispatch
                 throw e;
             }
         }
-        public static async void SendToMQTT(DONN.LS.Entities.TempLocations item)
+        public static async void SendToMQTT(DONN.LS.Entities.TempLocations item, string topic = "location")
         {
-            await Task.Run(async () =>
-            {
-                var message = messageBuilder.WithPayload(Newtonsoft.Json.JsonConvert.SerializeObject(item)).Build();
-                await mqttClient.PublishAsync(message);
-            });
+            var message = messageBuilder.WithTopic(topic).WithPayload(Newtonsoft.Json.JsonConvert.SerializeObject(item)).Build();
+            await mqttClient.PublishAsync(message);
         }
 
         public static async void SendToDB(IEnumerable<DONN.LS.Entities.TempLocations> items)
