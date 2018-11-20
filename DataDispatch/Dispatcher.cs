@@ -13,7 +13,6 @@ namespace DONN.LS.DataDispatch
         private static IManagedMqttClient mqttClient;
 
         private static MqttApplicationMessageBuilder messageBuilder = new MqttApplicationMessageBuilder()
-                .WithAtLeastOnceQoS()
                 .WithRetainFlag();
         static Dispatcher()
         {
@@ -42,10 +41,11 @@ namespace DONN.LS.DataDispatch
                 throw e;
             }
         }
-        public static async void SendToMQTT(DONN.LS.Entities.TempLocations item, string topic = "location")
+        public static async void SendToMQTT(DONN.LS.Entities.TempLocations item, string topic = "location"
+            , MQTTnet.Protocol.MqttQualityOfServiceLevel qos= MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
         {
             var message = messageBuilder.WithTopic(topic).WithPayload(Newtonsoft.Json.JsonConvert.SerializeObject(item)).Build();
-            await mqttClient.PublishAsync(message);
+            await mqttClient.PublishAsync(topic, Newtonsoft.Json.JsonConvert.SerializeObject(item), qos);
         }
 
         public static async void SendToDB(IEnumerable<DONN.LS.Entities.TempLocations> items)
