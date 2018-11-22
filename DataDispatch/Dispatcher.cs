@@ -27,7 +27,6 @@ namespace DONN.LS.DataDispatch
                 var options = new ManagedMqttClientOptionsBuilder()
                 .WithAutoReconnectDelay(TimeSpan.FromSeconds(5))
                 .WithClientOptions(new MqttClientOptionsBuilder()
-                .WithClientId("LSService")
                 .WithTcpServer(mqttHostName, mqttPort)
                 .WithCredentials(userName, password)
                 .Build())
