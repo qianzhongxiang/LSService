@@ -26,6 +26,7 @@ namespace DONN.LS.DBHelperSingle
         {
             modelBuilder.HasDefaultSchema(table_schema);
             modelBuilder.Entity<TempLocations>().HasIndex(t => t.SendTime);
+            modelBuilder.Entity<DeviceProfile>().Property(p => p.UpdateTime).IsConcurrencyToken();
             modelBuilder.Entity<DeviceProfile>().HasKey(c => new { c.Uid, c.Type });
         }
 

@@ -32,8 +32,6 @@ namespace DONN.LS.Entities
         /// </summary>
         public int Day { get; set; }
 
-
-
         [NotMapped]
         private TempLocations location;
         [NotMapped]

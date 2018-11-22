@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>DONN.LS.DataDispatch</AssemblyName>
-    <PackageVersion>1.0.8</PackageVersion>
+    <PackageVersion>1.0.9</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DONN.LS.DBHelperSingle" Version="1.0.3" />
+    <PackageReference Include="DONN.LS.DBHelperSingle" Version="1.0.4" />
     <PackageReference Include="DONN.LS.Entities" Version="1.0.6" />
     <PackageReference Include="MQTTnet" Version="2.8.4" />
     <PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="2.8.4" />

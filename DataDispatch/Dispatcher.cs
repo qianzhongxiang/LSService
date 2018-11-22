@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using DONN.Tools.Logger;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
@@ -41,7 +42,7 @@ namespace DONN.LS.DataDispatch
             }
         }
         public static async void SendToMQTT(DONN.LS.Entities.TempLocations item, string topic = "location"
-            , MQTTnet.Protocol.MqttQualityOfServiceLevel qos= MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
+            , MQTTnet.Protocol.MqttQualityOfServiceLevel qos = MQTTnet.Protocol.MqttQualityOfServiceLevel.AtMostOnce)
         {
             var message = messageBuilder.WithTopic(topic).WithPayload(Newtonsoft.Json.JsonConvert.SerializeObject(item)).Build();
             await mqttClient.PublishAsync(topic, Newtonsoft.Json.JsonConvert.SerializeObject(item), qos);
@@ -49,7 +50,18 @@ namespace DONN.LS.DataDispatch
 
         public static async void SendToDB(IEnumerable<DONN.LS.Entities.TempLocations> items)
         {
-            await Task.Run(() => dBHelper.UpdateItems(items));
+            await Task.Run(() =>
+            {
+                try
+                {
+                    dBHelper.UpdateItems(items);
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error(e.ToString(), e);
+                }
+            }
+           );
         }
     }
 }

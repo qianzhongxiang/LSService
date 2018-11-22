@@ -72,31 +72,35 @@ namespace DONN.LS.DBHelperSingle
         }
         public virtual void UpdateItems(IEnumerable<TempLocations> items)
         {
-            if (items == null)
+            lock (LocationContext)
             {
-                throw new ArgumentNullException(nameof(items));
-            }
-            foreach (var item in items)
-            {
-                item.CollectTime = item.CollectTime.ToUniversalTime();
-                item.SendTime = item.SendTime?.ToUniversalTime() ?? item.CollectTime;
-                var device = LocationContext.DeviceProfile.FirstOrDefault(d => d.Uid == item.UniqueId);
-                if (device == null)
+                if (items == null)
                 {
-                    LocationContext.DeviceProfile.Add(new DeviceProfile { Uid = item.UniqueId, Type = item.Type, IdLoactionData = item.Id, UpdateTime = item.SendTime.Value });
+                    throw new ArgumentNullException(nameof(items));
                 }
-                else
+                foreach (var item in items)
                 {
-                    device.IdLoactionData = item.Id;
-                    device.UpdateTime = item.SendTime.Value;
-                    LocationContext.DeviceProfile.Update(device);
+                    item.CollectTime = item.CollectTime.ToUniversalTime();
+                    item.SendTime = item.SendTime?.ToUniversalTime() ?? item.CollectTime;
+                    var device = LocationContext.DeviceProfile.FirstOrDefault(d => d.Uid == item.UniqueId && d.Type == item.Type);
+                    if (device == null)
+                    {
+                        LocationContext.DeviceProfile.Add(new DeviceProfile { Uid = item.UniqueId, Type = item.Type, IdLoactionData = item.Id, UpdateTime = item.SendTime.Value });
+                    }
+                    else
+                    {
+                        device.IdLoactionData = item.Id;
+                        device.UpdateTime = item.SendTime.Value;
+                        LocationContext.DeviceProfile.Update(device);
+                    }
                 }
+                LocationContext.TempLocations.AddRangeAsync(items);
             }
-            LocationContext.TempLocations.AddRangeAsync(items);
         }
         public virtual void UpdateProfile(IEnumerable<DeviceProfile> items)
         {
-            if (items == null)
+            lock (LocationContext) { 
+                if (items == null)
             {
                 throw new ArgumentNullException(nameof(items));
             }
@@ -111,6 +115,7 @@ namespace DONN.LS.DBHelperSingle
                     LocationContext.Entry(previous).State = EntityState.Detached;
                     LocationContext.DeviceProfile.Update(item);
                 }
+            }
             }
         }
 
