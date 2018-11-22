@@ -62,13 +62,13 @@ namespace DONN.LS.DBHelperSingle
         }
         private void DetachLocations()
         {
-            var enumer = LocationContext.TempLocations.Local.GetEnumerator();
-            while (enumer.MoveNext())
+            var list = LocationContext.TempLocations.Local.ToList();
+            list.ForEach(item =>
             {
-                var entry = LocationContext.Entry(enumer.Current);
+                var entry = LocationContext.Entry(item);
                 if (entry.State == Microsoft.EntityFrameworkCore.EntityState.Unchanged)
                     entry.State = Microsoft.EntityFrameworkCore.EntityState.Detached;
-            }
+            });
         }
         public virtual void UpdateItems(IEnumerable<TempLocations> items)
         {
