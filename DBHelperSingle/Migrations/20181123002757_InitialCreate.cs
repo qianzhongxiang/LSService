@@ -21,7 +21,8 @@ namespace DBHelperSingle.Migrations
                     IdLoactionData = table.Column<Guid>(nullable: false),
                     Interval = table.Column<int>(nullable: false),
                     UpdateTime = table.Column<DateTime>(nullable: false),
-                    Day = table.Column<int>(nullable: false)
+                    Day = table.Column<int>(nullable: false),
+                    TS = table.Column<byte[]>(rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {

@@ -13,7 +13,9 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace DONN.LS.DBHelperSingle
 {
-
+    /// <summary>
+    /// 
+    /// </summary>
     public abstract class Base
     {
         protected readonly string table_schema = "public";
@@ -45,7 +47,7 @@ namespace DONN.LS.DBHelperSingle
         }
         protected abstract void InitDbContextOptionsBuilder(string connectionString);
 
-        private SemaphoreSlim semaphore4Location = new SemaphoreSlim(1, 1);
+        private SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
         /// <summary>
         /// 需要改进性能
         /// </summary>
@@ -54,9 +56,24 @@ namespace DONN.LS.DBHelperSingle
         {
             return await Task.Run(async () =>
             {
-                var count = await LocationContext.SaveChangesAsync();
-                DetachLocations();
+                int count = 0;
+                try
+                {
+                    await semaphoreSlim.WaitAsync();
+                    count = await LocationContext.SaveChangesAsync();
+                    DetachLocations();
+                }
+                catch (Exception e)
+                {
+                    LogHelper.Error("DBHelperSingle: SaveChangeAsync failed; ", e);
+                }
+                finally
+                {
+                    semaphoreSlim.Release();
+
+                }
                 return count;
+
             });
 
         }
@@ -72,8 +89,9 @@ namespace DONN.LS.DBHelperSingle
         }
         public virtual void UpdateItems(IEnumerable<TempLocations> items)
         {
-            lock (LocationContext)
+            try
             {
+                semaphoreSlim.Wait();
                 if (items == null)
                 {
                     throw new ArgumentNullException(nameof(items));
@@ -82,7 +100,7 @@ namespace DONN.LS.DBHelperSingle
                 {
                     item.CollectTime = item.CollectTime.ToUniversalTime();
                     item.SendTime = item.SendTime?.ToUniversalTime() ?? item.CollectTime;
-                    var device = LocationContext.DeviceProfile.FirstOrDefault(d => d.Uid == item.UniqueId && d.Type == item.Type);
+                    var device = LocationContext.DeviceProfile.Local.FirstOrDefault(d => d.Uid == item.UniqueId && d.Type == item.Type) ?? LocationContext.DeviceProfile.FirstOrDefault(d => d.Uid == item.UniqueId && d.Type == item.Type);
                     if (device == null)
                     {
                         LocationContext.DeviceProfile.Add(new DeviceProfile { Uid = item.UniqueId, Type = item.Type, IdLoactionData = item.Id, UpdateTime = item.SendTime.Value });
@@ -91,31 +109,17 @@ namespace DONN.LS.DBHelperSingle
                     {
                         device.IdLoactionData = item.Id;
                         device.UpdateTime = item.SendTime.Value;
-                        LocationContext.DeviceProfile.Update(device);
                     }
                 }
                 LocationContext.TempLocations.AddRangeAsync(items);
             }
-        }
-        public virtual void UpdateProfile(IEnumerable<DeviceProfile> items)
-        {
-            lock (LocationContext) { 
-                if (items == null)
+            catch (Exception e)
             {
-                throw new ArgumentNullException(nameof(items));
+                LogHelper.Error("DBHelperSingle: UpdateItems failed", e);
             }
-            foreach (var item in items)
+            finally
             {
-                var previous = LocationContext.DeviceProfile.FirstOrDefault(i => i.Uid == item.Uid && i.Type == item.Type);
-                item.UpdateTime = item.UpdateTime.ToUniversalTime();
-                if (previous == null)
-                    LocationContext.DeviceProfile.Add(item);
-                else if (item != previous)
-                {
-                    LocationContext.Entry(previous).State = EntityState.Detached;
-                    LocationContext.DeviceProfile.Update(item);
-                }
-            }
+                semaphoreSlim.Release();
             }
         }
 
@@ -127,21 +131,26 @@ namespace DONN.LS.DBHelperSingle
             type = type.ToLower();
             eTime = eTime.ToUniversalTime();
             sTime = sTime.ToUniversalTime();
-
-            var query = LocationContext.TempLocations.AsNoTracking().Where(
-                 t => t.UniqueId == uid && t.Type == type && t.SendTime < eTime
-                 && t.SendTime > sTime
-             );
-            if (interval != 0)
+            IQueryable<TempLocations> query;
+            using (var instantlyContext = new LocationContext(locationOptionsBuilder.Options))
             {
-                query = query.Where(t => t.CustomInterval > interval);
+                query = instantlyContext.TempLocations.AsNoTracking().Where(
+                 t => t.UniqueId == uid && t.Type == type && t.SendTime < eTime
+                 && t.SendTime > sTime);
+                if (interval != 0)
+                {
+                    query = query.Where(t => t.CustomInterval > interval);
+                }
+                return query.Skip((index - 1) * count).Take(count).ToList();
             }
-            return query.Skip((index - 1) * count).Take(count);
         }
 
         public IEnumerable<DONN.LS.Entities.DeviceProfile> GetProfiles()
         {
-            return LocationContext.DeviceProfile.ToList();
+            semaphoreSlim.Wait();
+            var res = LocationContext.DeviceProfile.ToList();
+            semaphoreSlim.Release();
+            return res;
         }
     }
 }

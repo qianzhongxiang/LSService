@@ -10,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DBHelperSingle.Migrations
 {
     [DbContext(typeof(LocationContext))]
-    [Migration("20181122014902_InitialCreate")]
+    [Migration("20181123002757_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,6 +35,10 @@ namespace DBHelperSingle.Migrations
                     b.Property<Guid>("IdLoactionData");
 
                     b.Property<int>("Interval");
+
+                    b.Property<byte[]>("TS")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate();
 
                     b.Property<DateTime>("UpdateTime");
 

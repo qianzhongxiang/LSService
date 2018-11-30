@@ -1,6 +1,7 @@
 
 using DONN.LS.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace DONN.LS.DBHelperSingle
 {
@@ -14,6 +15,7 @@ namespace DONN.LS.DBHelperSingle
         }
         public LocationContext(DbContextOptions<LocationContext> options) : base(options)
         {
+            
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -26,7 +28,7 @@ namespace DONN.LS.DBHelperSingle
         {
             modelBuilder.HasDefaultSchema(table_schema);
             modelBuilder.Entity<TempLocations>().HasIndex(t => t.SendTime);
-            modelBuilder.Entity<DeviceProfile>().Property(p => p.UpdateTime).IsConcurrencyToken();
+            modelBuilder.Entity<DeviceProfile>().ForNpgsqlUseXminAsConcurrencyToken().Property(p => p.TS).IsRowVersion();
             modelBuilder.Entity<DeviceProfile>().HasKey(c => new { c.Uid, c.Type });
         }
 

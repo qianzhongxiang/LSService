@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using DONN.Tools.Logger;
 using MQTTnet;
@@ -17,7 +18,14 @@ namespace DONN.LS.DataDispatch
                 .WithRetainFlag();
         static Dispatcher()
         {
-
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(5));
+                    SaveChangesOfDB();
+                }
+            });
 
         }
         public static void Init(string mqttHostName, int mqttPort, string userName, string password = null, string dbConnectStr = null)
@@ -62,6 +70,10 @@ namespace DONN.LS.DataDispatch
                 }
             }
            );
+        }
+
+        private static async Task<int> SaveChangesOfDB() {
+            return await dBHelper.SaveChangeAsync();
         }
     }
 }

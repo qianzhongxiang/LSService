@@ -34,6 +34,10 @@ namespace DBHelperSingle.Migrations
 
                     b.Property<int>("Interval");
 
+                    b.Property<byte[]>("TS")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate();
+
                     b.Property<DateTime>("UpdateTime");
 
                     b.HasKey("Uid", "Type");

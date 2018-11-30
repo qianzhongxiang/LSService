@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DONN.LS.Entities
 {
@@ -31,6 +28,9 @@ namespace DONN.LS.Entities
         /// 系统自动生成，不需要手动填写 format:yyyMMdd
         /// </summary>
         public int Day { get; set; }
+
+        [Timestamp]
+        public byte[] TS { get; set; }
 
         [NotMapped]
         private TempLocations location;

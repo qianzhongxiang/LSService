@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>DONN.LS.Entities</AssemblyName>
     <RootNamespace>DONN.LS.Entities</RootNamespace>
-    <PackageVersion>1.0.6</PackageVersion>
+    <PackageVersion>1.0.14</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
